@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>CareerPath Navigator</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+    <div id="topbar" class="topbar">
+        <div style="font-size: 1.4em; font-weight: 700;">Careerpath Navigator</div>
+        <div class="nav-links">
+            <span id="userGreeting" style="margin-right: 15px;">Hi, Guest</span>
+            <button id="nav_careers">Careers (LKG to Role)</button>
+            <button id="nav_depths">In Depths (Specialization)</button>
+            <button id="nav_roadmaps">Roadmaps (Flowcharts)</button>
+            <button id="nav_quiz">Quiz</button>
+            <button id="nav_dashboard">Dashboard</button>
+            <button id="nav_profile">Profile & Resume</button>
+            <button id="logoutBtn">Logout</button>
+        </div>
+    </div>
+
+    <div id="page_auth" class="page-container active">
+        <h2>Welcome to Careerpath Navigator</h2>
+        <div style="max-width: 400px; margin: 30px auto;">
+            <div id="formLogin">
+                <h3>Login</h3>
+                <div class="form-group"><input type="email" id="login_email" placeholder="Email" required></div>
+                <div class="form-group"><input type="password" id="login_pass" placeholder="Password" required></div>
+                <div class="form-group" style="display:flex; justify-content:space-between; align-items:center;">
+                    <label><input type="checkbox" id="login_remember"> Remember Me</label>
+                    <button id="demoFill" class="small btn-back" style="border:none;">Demo Fill</button>
+                </div>
+                <button id="btnLogin" class="btn" style="width: 100%; margin-bottom: 15px;">Login</button>
+                <div class="small" style="text-align: center;">Don't have an account? <a href="#" id="showRegisterLink">Register</a></div>
+            </div>
+            <div id="formRegister" style="display:none;">
+                <h3>Register</h3>
+                <div class="form-group"><input type="text" id="reg_name" placeholder="Name" required></div>
+                <div class="form-group"><input type="email" id="reg_email" placeholder="Email" required></div>
+                <div class="form-group"><input type="password" id="reg_pass" placeholder="Password" required></div>
+                <div class="form-group"><label><input type="checkbox" id="reg_remember"> Remember Me</label></div>
+                <button id="btnRegister" class="btn" style="width: 100%; margin-bottom: 15px;">Register</button>
+                <div class="small" style="text-align: center;">Already have an account? <a href="#" id="showLoginLink">Login</a></div>
+            </div>
+        </div>
+    </div>
+
+    <div id="page_welcome" class="page-container" style="text-align: center;">
+        <h2 id="welcomeTitle" style="font-size: 2em; color: #3b82f6;">Welcome!</h2>
+        <p id="welcomeSub" style="font-size: 1.2em;">Let's find your perfect career path.</p>
+        <div class="panel" style="margin: 40px auto; max-width: 500px;">
+            <p style="font-size: 1.1em; font-weight: bold; margin-bottom: 20px;">Start with our quick assessment to get personalized recommendations:</p>
+            <button id="btnQuizYes" class="btn" style="margin: 10px;">Start 5-Minute Quiz</button>
+            <button id="btnQuizNo" class="btn-back" style="margin: 10px;">Skip & Explore All</button>
+        </div>
+    </div>
+    
+    <div id="page_quiz" class="page-container">
+        <h2>Career Fit Quiz</h2>
+        <div style="margin-bottom: 20px;">
+            <span id="qCount"></span>
+            <div style="background-color: #e5e7eb; height: 8px; border-radius: 4px; margin-top: 5px;"><div id="quizProgBar" style="height: 8px; background-color: #10b981; width: 0%; transition: width 0.3s; border-radius: 4px;"></div></div>
+        </div>
+        <div id="quizContent" class="panel"></div>
+        <div style="margin-top: 20px; display: flex; justify-content: space-between; align-items:center;">
+            <button id="quizPrev" class="btn-back">← Previous</button>
+            <div>
+                <button id="quizSkip" class="btn-back">Skip</button>
+                <button id="quizNext" class="btn">Next →</button>
+                <!-- Check result button (hidden until end) -->
+                <button id="checkResultBtn" class="btn" style="display:none; margin-left:8px; background-color:#10b981; border-color:#10b981;">Check Result</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="page_results" class="page-container">
+        <h2>🎉 Your Personalized Results!</h2>
+        <div id="resultArea" style="margin-top: 20px;"></div>
+        <div style="margin-top: 30px;">
+            <button id="btnSaveResult" class="btn">Save to Dashboard</button>
+            <button id="btnGoToCareersFromResults" class="btn-back">Explore All Career Groups</button>
+        </div>
+    </div>
+
+    <div id="page_careers" class="page-container">
+        <h2 style="color: #3b82f6;">Careers: The Full Journey (LKG to Key Role)</h2>
+        <p class="small">View the complete life journey, from early education to achieving a major career milestone.</p>
+        <input type="text" id="careersSearch" placeholder="Search Career Groups..." style="margin-bottom: 20px;">
+        <div id="careersGrid" class="grid-container"></div>
+    </div>
+
+    <div id="page_career_detail" class="page-container">
+        <button id="detailBack" class="btn-back">← Back to Career Groups</button>
+        <h2 id="detailTitle" style="margin-top:10px; color: #3b82f6;"></h2>
+        <p id="detailSubtitle" class="small"></p>
+        
+        <div id="detailRoles" class="panel" style="margin-top:20px;"></div> 
+
+        <div id="detailRoadmap" class="panel" style="margin-top:20px;"></div>
+    </div>
+
+    <div id="page_depths" class="page-container">
+        <h2 id="depthsTitle" style="color: #10b981;">In Depths: Specialization Tracks</h2>
+        <p class="small">Select a Key Role to see detailed specialization paths (e.g., Engineering → AI/ML, Web Dev).</p>
+        <input type="text" id="depthsSearch" placeholder="Search Specializations or Roles..." style="margin-bottom: 20px;">
+        <div id="depthsGrid" class="grid-container"></div>
+    </div>
+
+    <div id="page_depths_detail" class="page-container">
+        <button id="depthDetailBack" class="btn-back">← Back to Specializations</button>
+        <h2 id="depthDetailTitle" style="margin-top:10px; color: #10b981;"></h2>
+        <p id="depthDetailSubtitle" class="small"></p>
+        <div id="depthDetailPath" class="panel" style="margin-top:20px;"></div>
+    </div>
+
+    <div id="page_roadmaps" class="page-container">
+        <h2 style="color: #ef4444;">Roadmaps: Quick Visual Guides (Flowcharts)</h2>
+        <p class="small">Get a quick, high-level, step-by-step visual summary of the journey for all major career groups.</p>
+        <div id="roadmapsArea"></div>
+    </div>
+    
+    <div id="page_dashboard" class="page-container">
+        <h2>Your Dashboard</h2>
+        <div class="grid-container" style="grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));">
+            <div class="panel">Quizzes Taken: <span id="statQuizzes">0</span></div>
+            <div class="panel">Saved Plans: <span id="statPlans">0</span></div>
+            <div class="panel">Bookmarks: <span id="statBookmarks">0</span></div>
+        </div>
+        <div class="panel" style="margin-top: 30px;">
+            <h3>Badges</h3>
+            <div id="badgesArea" style="display: flex; gap: 10px; flex-wrap: wrap;"></div>
+        </div>
+    </div>
+
+    <div id="page_profile" class="page-container">
+        <h2>Profile & Resume Builder</h2>
+        <div class="panel">
+            <div class="form-group"><label>Name</label><input type="text" id="profile_name"></div>
+            <div class="form-group"><label>Email</label><input type="email" id="profile_email" readonly></div>
+            <div class="form-group"><label>Bio</label><textarea id="profile_bio" rows="3"></textarea></div>
+            <button id="saveProfile" class="btn">Save Profile</button>
+            <button id="exportProfile" class="btn-back">Export Data</button>
+        </div>
+        <div class="panel" style="margin-top: 20px;">
+            <h3>Resume Builder Tool</h3>
+            <p class="small">Input your details below to generate a simple, clean resume draft.</p>
+            <div class="form-group"><label>Key Skills (Comma-separated)</label><textarea id="resume_skills" rows="2" placeholder="e.g., Python, Data Analysis, Cloud"></textarea></div>
+            <div class="form-group"><label>Education</label><textarea id="resume_edu" rows="2" placeholder="e.g., B.Tech, XYZ University"></textarea></div>
+            <div class="form-group"><label>Projects/Experience</label><textarea id="resume_projects" rows="3" placeholder="List key projects or jobs"></textarea></div>
+            <button id="generateResume" class="btn">Generate Resume Preview</button>
+            <button id="downloadResume" class="btn-back">Download (.txt)</button>
+            <pre id="resume_preview" style="background:#f4f4f4; padding:15px; margin-top:15px; border-radius: 6px; white-space: pre-wrap;"></pre>
+        </div>
+    </div>
+    
+    <div id="page_testimonials" class="page-container">
+        <h2>What Our Users Say</h2>
+        <div class="panel">"The quiz instantly pointed me to Data Science. A great starting point!" - Priya S.</div>
+        <div class="panel">"The 'In Depths' section clearly mapped my next steps after my B.Tech." - Rohan V.</div>
+    </div>
+
+    <button id="chatToggle">🤖</button>
+    <div id="chatBox">
+        <div class="topbar" style="display: flex; padding: 10px; border-radius: 12px 12px 0 0; background-color: #3b82f6;">
+            <div style="font-weight: bold;">CareerBot AI</div>
+        </div>
+        <div id="chatBody"></div>
+        <div id="chatInputContainer">
+            <input type="text" id="chatInput" placeholder="Ask CareerBot...">
+            <button id="chatSend" class="btn">Send</button>
+        </div>
+    </div>
+
+<script src="script.js"></script>
+</body>
+</html>

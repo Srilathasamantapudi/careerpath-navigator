@@ -1,0 +1,809 @@
+/* ============================================================
+    Data: CAREERS & ACCOUNTS
+   ============================================================ */
+const storage = localStorage;
+function getAccounts(){ try { return JSON.parse(storage.getItem('cp_accounts')||'{}'); } catch(e){ return {}; } }
+function saveAccounts(ac){ storage.setItem('cp_accounts', JSON.stringify(ac)); }
+function getUser(){ try{ const u = JSON.parse(storage.getItem('cp_user')||'null'); if(u && u.email) return u; return null; } catch(e){ return null; } }
+function setUser(u,remember=false){ storage.setItem('cp_user', JSON.stringify(u)); if(remember && u && u.email){ const ac = getAccounts(); ac[u.email] = ac[u.email] || {name: u.name, email: u.email, pass: null, plans: [], quizCount: 0, bookmarks: []}; saveAccounts(ac); storage.setItem('cp_remember', u.email); } else { storage.removeItem('cp_remember'); } }
+function clearUser(){ storage.removeItem('cp_user'); }
+
+/* --- Enhanced Careers dataset with complete specializations --- */
+const CAREERS = {
+    engineering: {
+        title: "Engineering", subtitle: "Innovation and Problem Solving",
+        rationale: "Strong alignment with logical puzzles, coding, and advanced scientific research.",
+        path_lkg_to_main: ["LKG to 10th (Build Math & Science Base)", "11th-12th: PCM/CS (Entrance Prep)", "Competitive Exams (JEE/BITSAT)", "Undergraduate Degree (B.Tech/BE)", "Core Internships & Projects"],
+        roles: {
+            aiml: { name: "AI/ML Engineer", desc: "Design and implement machine learning models.", skills: ["Python", "TensorFlow/PyTorch", "Statistics", "Calculus"], path_main_to_sub: ["Master Python & Libraries", "Complete Deep Learning Specialization", "Contribute to Open Source/Kaggle", "Secure MLOps/Production Role"] },
+            datascience: { name: "Data Scientist", desc: "Analyze complex data for business insights.", skills: ["SQL", "R/Python", "Statistics", "Data Viz"], path_main_to_sub: ["Advanced Statistics & Probability", "Learn BI Tools (Tableau/PowerBI)", "Focus on Domain-specific Data", "Data Storytelling & Communication"] },
+            webdev: { name: "Web Developer", desc: "Build and maintain scalable web applications.", skills: ["HTML", "CSS", "JavaScript", "React/Node.js"], path_main_to_sub: ["Master Full-Stack Fundamentals", "Contribute to Live Projects", "Learn Cloud Deployment (AWS/Azure)", "Specialization in Security or Performance"] },
+            cloud: { name: "Cloud Engineer", desc: "Design and manage cloud infrastructure solutions.", skills: ["AWS/Azure/GCP", "Linux", "Networking", "Containerization"], path_main_to_sub: ["Learn Cloud Computing Fundamentals", "Master Cloud Platform Services", "Understand Infrastructure as Code", "Specialize in Cloud Security"] }
+        },
+        roadmap: ["B.Tech/BE Degree", "Core Internships", "Entry-level Role", "Specialization/M.Tech"],
+        courses: [{title:"CS50 (Harvard)"}, {title:"Python for Everybody"}]
+    },
+    doctor: {
+        title: "Doctor / Healthcare", subtitle: "Healing and Patient Care",
+        rationale: "High interest in biology, health, and a commitment to serving people.",
+        path_lkg_to_main: ["LKG to 10th (Strong Science Focus)", "11th-12th: PCB (NEET Prep)", "NEET-UG Entrance Exam", "MBBS Degree (5.5 years)", "Compulsory Internship"],
+        roles: {
+            surgeon: { name: "Surgeon", desc: "Perform surgical procedures to treat injuries or diseases.", skills: ["Anatomy", "Precision", "High-Stress Tolerance"], path_main_to_sub: ["Clear NEET-PG", "Residency (MS - Master of Surgery)", "Fellowship in Sub-specialty", "Clinical Practice & Research"] },
+            pediatrician: { name: "Pediatrician", desc: "Provide medical care to infants, children, and adolescents.", skills: ["Child Development", "Patient Communication", "Vaccinology"], path_main_to_sub: ["Clear NEET-PG", "Residency (MD - Pediatrics)", "Sub-specialty Fellowship (e.g., Neonatology)"] },
+            cardiologist: { name: "Cardiologist", desc: "Specialize in heart and cardiovascular system diseases.", skills: ["Cardiac Anatomy", "ECG Interpretation", "Interventional Procedures"], path_main_to_sub: ["Clear NEET-PG", "MD in General Medicine", "DM in Cardiology", "Cardiac Specialization"] }
+        },
+        roadmap: ["NEET-UG", "MBBS Completion", "NEET-PG", "Residency & Practice"],
+        courses: [{title:"Khan Academy Biology"}, {title:"Anatomy Flashcards App"}]
+    },
+    ca: { 
+        title: "Chartered Accountant (CA)", 
+        subtitle: "Financial Expertise & Auditing", 
+        rationale: "Strong interest in numbers, accounts, and financial analysis.", 
+        path_lkg_to_main: ["LKG to 10th", "11th-12th Commerce", "CA Foundation Exam", "CA Intermediate Exam", "Articleship (3-Year Practical Training)"], 
+        roles: {
+            auditor: { name: "Auditor", desc: "Examine and verify financial records for accuracy.", skills: ["Accounting Standards", "Audit Procedures", "Risk Assessment"], path_main_to_sub: ["Complete CA Foundation", "Clear CA Intermediate", "Specialize in Auditing", "Gain Audit Experience"] },
+            tax: { name: "Tax Consultant", desc: "Provide expert advice on tax planning and compliance.", skills: ["Tax Laws", "Financial Planning", "Legal Compliance"], path_main_to_sub: ["Complete CA Foundation", "Clear CA Intermediate", "Specialize in Taxation", "Develop Client Advisory Skills"] }
+        }, 
+        roadmap: ["CA Foundation", "CA Intermediate", "3-Year Articleship", "CA Final"], 
+        courses: [{title:"Tally ERP Basics"}, {title:"Advanced Financial Accounting"}] 
+    },
+    ias: { 
+        title: "Indian Administrative Service (IAS)", 
+        subtitle: "Public Policy and Administration", 
+        rationale: "Interest in leadership, public policy, and social impact.", 
+        path_lkg_to_main: ["LKG to 12th (General Knowledge)", "Undergraduate Degree in any stream", "UPSC CSE Preparation (1-2 years)", "UPSC CSE Prelims and Mains", "Interview & Training (LBSNAA)"], 
+        roles: {
+            district: { name: "District Administration", desc: "Manage district affairs and implement government policies.", skills: ["Public Administration", "Leadership", "Policy Implementation"], path_main_to_sub: ["Complete Foundation Course", "District Training", "Develop Administrative Skills", "Lead District Initiatives"] },
+            policy: { name: "Policy Making", desc: "Formulate and implement policies at government levels.", skills: ["Policy Analysis", "Research", "Stakeholder Management"], path_main_to_sub: ["Complete Foundation Course", "Ministry Postings", "Develop Policy Expertise", "Lead Policy Formulation"] }
+        }, 
+        roadmap: ["Degree Completion", "UPSC Preparation", "CSE Exams", "Training & Posting"], 
+        courses: [{title:"Indian Polity (Laxmikanth)"}, {title:"Economics Basics"}] 
+    },
+    banking: { 
+        title: "Banking & Finance", 
+        subtitle: "Financial Services & Investment", 
+        rationale: "Interest in finance, markets, and managing capital.", 
+        path_lkg_to_main: ["LKG to 10th", "11th-12th Commerce", "BBA/B.Com/B.Sc. Finance", "MBA/PGDM or Certifications (CFA)", "Entry-level roles in banks/NBFCs"], 
+        roles: {
+            investment: { name: "Investment Banking", desc: "Advise corporations on mergers and capital raising.", skills: ["Financial Modeling", "Valuation", "Deal Structuring"], path_main_to_sub: ["Complete Finance Degree", "Learn Financial Modeling", "Gain Investment Banking Internship", "Start as Analyst"] },
+            retail: { name: "Retail Banking", desc: "Manage customer-facing banking services and relationships.", skills: ["Customer Service", "Banking Products", "Relationship Management"], path_main_to_sub: ["Complete Bachelor's Degree", "Clear Banking Exams", "Start as Probationary Officer", "Progress to Management"] }
+        }, 
+        roadmap: ["Undergraduate Degree", "MBA/Certifications", "Banking Exams (IBPS/RBI)", "Start as Analyst/Officer"], 
+        courses: [{title:"Corporate Finance"}, {title:"Financial Modeling"}] 
+    },
+    law: { 
+        title: "Lawyer/Advocate", 
+        subtitle: "Justice and Legal System", 
+        rationale: "Interest in structured logic, debate, and justice.", 
+        path_lkg_to_main: ["LKG to 12th in any stream", "CLAT/Law Entrance Exam", "5-year Integrated Law Degree (e.g., BA-LLB)", "Bar Council Enrollment", "Junior Advocate/Judicial Prep"], 
+        roles: {
+            corporate: { name: "Corporate Lawyer", desc: "Handle legal matters for businesses and corporations.", skills: ["Contract Law", "Corporate Compliance", "Negotiation"], path_main_to_sub: ["Complete Law Degree", "Specialize in Corporate Law", "Intern with Law Firms", "Join Corporate Legal Department"] },
+            litigation: { name: "Litigation Lawyer", desc: "Represent clients in court and handle legal disputes.", skills: ["Court Procedures", "Case Preparation", "Argumentation"], path_main_to_sub: ["Complete Law Degree", "Develop Courtroom Skills", "Intern with Senior Advocates", "Establish Legal Practice"] }
+        }, 
+        roadmap: ["Law Entrance", "5-year LLB Degree", "Bar Exam", "Practice/Judiciary"], 
+        courses: [{title:"Constitutional Law"}, {title:"Contract Law Fundamentals"}] 
+    },
+    art: { 
+        title: "Artist/Designer", 
+        subtitle: "Creative Expression & Visual Communication", 
+        rationale: "Interest in creative output and visual arts.", 
+        path_lkg_to_main: ["LKG to 12th (Portfolio Building)", "Design Entrance Exam (NIFT/NID)", "B.Des/BFA Degree", "Internships/Freelance Projects"], 
+        roles: {
+            graphic: { name: "Graphic Designer", desc: "Create visual concepts to communicate ideas.", skills: ["Adobe Creative Suite", "Typography", "Layout Design"], path_main_to_sub: ["Complete Design Degree", "Master Design Software", "Build Design Portfolio", "Join Agency or Freelance"] },
+            uiux: { name: "UI/UX Designer", desc: "Design user interfaces and experiences for digital products.", skills: ["User Research", "Wireframing", "Prototyping"], path_main_to_sub: ["Complete Design Degree", "Learn UI/UX Principles", "Build Digital Portfolio", "Join Tech Company"] }
+        }, 
+        roadmap: ["Portfolio", "Design School", "Internships/Projects", "Freelance/Agency Role"], 
+        courses: [{title:"Design Principles"}, {title:"Adobe Illustrator Basics"}] 
+    },
+    teaching: { 
+        title: "Teacher/Professor", 
+        subtitle: "Education and Mentorship", 
+        rationale: "Interest in sharing knowledge and shaping young minds.", 
+        path_lkg_to_main: ["LKG to 12th", "Undergraduate Degree in Subject", "B.Ed/D.Ed (for school) or Master's/NET (for college)", "Teaching Practice & Licensing"], 
+        roles: {
+            school: { name: "School Teacher", desc: "Educate students at primary or secondary level.", skills: ["Pedagogy", "Child Psychology", "Curriculum Planning"], path_main_to_sub: ["Complete Bachelor's Degree", "Pursue B.Ed", "Clear Teacher Eligibility Test", "Join School as Teacher"] },
+            professor: { name: "College Professor", desc: "Teach undergraduate and graduate students.", skills: ["Subject Expertise", "Research Methodology", "Academic Writing"], path_main_to_sub: ["Complete Master's Degree", "Clear NET/SET", "Pursue Ph.D.", "Join College/University"] }
+        }, 
+        roadmap: ["Degree in Subject", "B.Ed/M.Ed/Master's", "Teacher Eligibility Test", "Teaching Position"], 
+        courses: [{title:"Pedagogy & Child Dev"}, {title:"Online Course Design"}] 
+    },
+    hospitality: { 
+        title: "Hospitality Management", 
+        subtitle: "Service, Tourism & Guest Relations", 
+        rationale: "Interest in service, operations, and cultural exchange.", 
+        path_lkg_to_main: ["LKG to 12th in any stream", "Hotel Management Entrance", "B.Sc./BHM Degree", "Internships & Management Trainee Programs"], 
+        roles: {
+            hotel: { name: "Hotel Management", desc: "Manage hotel operations and guest services.", skills: ["Customer Service", "Operations Management", "Revenue Management"], path_main_to_sub: ["Complete HM Degree", "Intern in Hotel Departments", "Develop Operational Skills", "Progress to Management"] },
+            event: { name: "Event Management", desc: "Plan and execute events and conferences.", skills: ["Event Planning", "Vendor Management", "Budgeting"], path_main_to_sub: ["Complete HM Degree", "Specialize in Event Management", "Gain Event Experience", "Start Event Career"] }
+        }, 
+        roadmap: ["HM Entrance", "BHM Degree", "Internships", "Management Trainee"], 
+        courses: [{title:"Customer Service Excellence"}, {title:"Hotel Operations"}] 
+    },
+    research: { 
+        title: "Scientific Researcher", 
+        subtitle: "Discovery, Innovation & Academia", 
+        rationale: "High interest in data, research, and scientific discovery.", 
+        path_lkg_to_main: ["LKG to 10th (Strong Science)", "11th-12th Science", "B.Sc./B.Tech/B.S.", "Master's Degree (M.Sc./M.Tech)", "Ph.D. Program"], 
+        roles: {
+            academic: { name: "Academic Researcher", desc: "Conduct research in universities and institutions.", skills: ["Research Methodology", "Data Analysis", "Academic Writing"], path_main_to_sub: ["Complete Master's Degree", "Clear Research Entrance", "Pursue Ph.D.", "Post-doctoral Research"] },
+            industrial: { name: "Industrial Researcher", desc: "Conduct applied research in corporate R&D.", skills: ["Applied Research", "Product Development", "Technical Writing"], path_main_to_sub: ["Complete Master's/Ph.D.", "Gain Industry Experience", "Develop Research Skills", "Join Corporate R&D"] }
+        }, 
+        roadmap: ["Undergrad", "Postgrad", "PhD Admission", "Post-doc/Faculty"], 
+        courses: [{title:"Scientific Method"}, {title:"Academic Writing"}] 
+    }
+};
+
+/* ============================================================
+    Routing & UI helpers
+   ============================================================ */
+const pages = {
+    auth: document.getElementById('page_auth'), welcome: document.getElementById('page_welcome'), quiz: document.getElementById('page_quiz'),
+    results: document.getElementById('page_results'), careers: document.getElementById('page_careers'), career_detail: document.getElementById('page_career_detail'),
+    dashboard: document.getElementById('page_dashboard'), profile: document.getElementById('page_profile'), roadmaps: document.getElementById('page_roadmaps'),
+    testimonials: document.getElementById('page_testimonials'), depths: document.getElementById('page_depths'), depths_detail: document.getElementById('page_depths_detail')
+};
+const topbar = document.getElementById('topbar');
+
+function showPage(name){
+    Object.values(pages).forEach(p => p && p.classList.remove('active'));
+    if(pages[name]) pages[name].classList.add('active');
+    if(name === 'auth') topbar.style.display = 'none'; else topbar.style.display = 'flex';
+    window.scrollTo({top:0,behavior:'smooth'});
+}
+function navTo(name){ location.hash = name; }
+
+function handleHash(){
+    const h = location.hash.replace('#','') || (getUser() ? 'welcome' : 'auth');
+    if(h.startsWith('career:')) {
+        const key = h.split(':')[1]; openCareerDetail(key);
+    } else if(h.startsWith('depths:')) {
+        const parts = h.split(':');
+        if(parts.length === 3) { openDepthsDetail(parts[1], parts[2]); }
+        else { renderDepths(parts[1]); }
+    } else if(h in pages) {
+        showPage(h);
+    } else {
+        showPage('auth');
+    }
+}
+window.addEventListener('hashchange', handleHash);
+
+/* ============================================================
+    Auth (Simplified)
+   ============================================================ */
+const formRegister = document.getElementById('formRegister');
+const formLogin = document.getElementById('formLogin');
+
+document.getElementById('showLoginLink')?.addEventListener('click', e => { e.preventDefault(); formRegister.style.display = 'none'; formLogin.style.display = 'block'; });
+document.getElementById('showRegisterLink')?.addEventListener('click', e => { e.preventDefault(); formRegister.style.display = 'block'; formLogin.style.display = 'none'; });
+document.getElementById('demoFill')?.addEventListener('click', e => { document.getElementById('login_email').value = 'demo@example.com'; document.getElementById('login_pass').value = 'demo123'; });
+
+function processAuth(name, email, pass, remember, isRegister) {
+    const ac = getAccounts();
+    if(isRegister) {
+        if(ac[email]){ alert('Account exists — please login'); return false; }
+        ac[email] = {name, email, pass, plans:[], quizCount:0, bookmarks:[]}; saveAccounts(ac);
+    } else {
+        if(!ac[email] || (ac[email].pass !== pass && ac[email].pass !== null && ac[email].pass !== undefined)) {
+            if(ac[email] && !ac[email].pass){ /* demo fallback */ } else { alert('Invalid credentials. For demo try email: demo@example.com pass: demo123 or create an account.'); return false; }
+        }
+        name = ac[email].name;
+    }
+    setUser({name, email}, remember); updateTopUser(); greetAndAsk(); return true;
+}
+
+document.getElementById('btnRegister')?.addEventListener('click', ()=> {
+    const name = document.getElementById('reg_name').value.trim();
+    const email = document.getElementById('reg_email').value.trim().toLowerCase();
+    const pass = document.getElementById('reg_pass').value;
+    const remember = document.getElementById('reg_remember').checked;
+    if(!name||!email||!pass){ alert('Please fill all fields'); return; } processAuth(name, email, pass, remember, true);
+});
+
+document.getElementById('btnLogin')?.addEventListener('click', ()=> {
+    const email = document.getElementById('login_email').value.trim().toLowerCase();
+    const pass = document.getElementById('login_pass').value;
+    const remember = document.getElementById('login_remember').checked;
+    processAuth(null, email, pass, remember, false);
+});
+
+(function ensureDemoAccount(){
+    const ac = getAccounts();
+    if(!ac['demo@example.com']){ ac['demo@example.com'] = {name:'Demo User',email:'demo@example.com',pass:'demo123',plans:[],quizCount:0,bookmarks:[]}; saveAccounts(ac); }
+})();
+
+function updateTopUser(){
+    const u = getUser();
+    if(u){ document.getElementById('userGreeting').textContent = "Hi, " + (u.name || 'User'); topbar.style.display = 'flex'; }
+    else { document.getElementById('userGreeting').textContent = "Hi, Guest"; topbar.style.display = 'none'; }
+}
+function greetAndAsk(){
+    const u = getUser(); if(!u) return;
+    document.getElementById('welcomeTitle').textContent = `Welcome${u.name ? ', ' + u.name : ''}!`;
+    document.getElementById('welcomeSub').textContent = `Welcome back${u.name ? ', ' + u.name : ''}. Ready to explore?`;
+    navTo('welcome');
+}
+document.getElementById('logoutBtn')?.addEventListener('click', ()=> { clearUser(); updateTopUser(); navTo('auth'); });
+
+document.getElementById('nav_quiz')?.addEventListener('click', ()=> { const u = getUser(); if(!u){ alert('Please sign in first'); navTo('auth'); return; } startQuiz(); navTo('quiz'); });
+document.getElementById('nav_careers')?.addEventListener('click', ()=> { navTo('careers'); });
+document.getElementById('nav_depths')?.addEventListener('click', ()=> { navTo('depths'); renderDepths(); });
+document.getElementById('nav_roadmaps')?.addEventListener('click', ()=> { navTo('roadmaps'); renderRoadmaps(); });
+document.getElementById('nav_dashboard')?.addEventListener('click', ()=> { navTo('dashboard'); loadDashboard(); });
+document.getElementById('nav_profile')?.addEventListener('click', ()=> { navTo('profile'); loadProfile(); });
+
+/* ============================================================
+    Search Functionality
+   ============================================================ */
+function filterCards(gridElement, searchInput) {
+    const filter = searchInput.value.toLowerCase();
+    Array.from(gridElement.children).forEach(card => {
+        if (!card.classList.contains('career-card')) return;
+        const title = card.getAttribute('data-title').toLowerCase();
+        if (title.includes(filter)) {
+            card.style.display = 'block';
+        } else {
+            card.style.display = 'none';
+        }
+    });
+}
+
+/* ============================================================
+    CAREERS (LKG to Key Role Path)
+   ============================================================ */
+const careersGrid = document.getElementById('careersGrid');
+const careersSearch = document.getElementById('careersSearch');
+
+function renderCareers(){
+    careersGrid.innerHTML = '';
+    for(const key in CAREERS){
+        const c = CAREERS[key];
+        const card = document.createElement('div'); card.className='career-card';
+        card.setAttribute('data-title', c.title);
+        card.innerHTML = `<div style="font-weight:900">${c.title}</div><div class="small" style="margin-top:6px">${c.subtitle}</div>`;
+        card.addEventListener('click', ()=> { location.hash = 'career:'+key; });
+        careersGrid.appendChild(card);
+    }
+}
+careersSearch?.addEventListener('input', ()=> filterCards(careersGrid, careersSearch));
+
+function openCareerDetail(key){
+    const data = CAREERS[key];
+    if(!data) return;
+    showPage('career_detail');
+    document.getElementById('detailTitle').textContent = data.title;
+    document.getElementById('detailSubtitle').textContent = data.subtitle;
+
+    const rolesEl = document.getElementById('detailRoles'); rolesEl.innerHTML = '';
+
+    const pathEl = document.createElement('div');
+    pathEl.innerHTML = `<div style="font-weight:800; margin-bottom: 10px;">Full Path: LKG to ${data.title}</div>`;
+
+    // Using simple divs for flowchart feel without complex rendering
+    data.path_lkg_to_main.forEach(step => {
+        const stepDiv = document.createElement('div');
+        stepDiv.className = 'path-step';
+        stepDiv.textContent = step;
+        pathEl.appendChild(stepDiv);
+    });
+    rolesEl.appendChild(pathEl);
+
+    const roadmap = document.getElementById('detailRoadmap');
+    roadmap.innerHTML = `<div style="margin-top:12px"><div style="font-weight:800">Quick Roadmap Summary</div><ol style="margin-top:8px">${data.roadmap.map(s=>`<li>${s}</li>`).join('')}</ol></div>`;
+}
+document.getElementById('detailBack')?.addEventListener('click', ()=> { navTo('careers'); });
+
+/* ============================================================
+    IN DEPTHS (Specializations) - FIXED
+   ============================================================ */
+const depthsGrid = document.getElementById('depthsGrid');
+const depthsSearch = document.getElementById('depthsSearch');
+const depthsTitle = document.getElementById('depthsTitle');
+
+function renderDepths(mainKey = null) {
+    showPage('depths');
+    depthsGrid.innerHTML = '';
+    if (depthsSearch) depthsSearch.value = '';
+    
+    // If no specific career selected, show all careers with specializations
+    if (!mainKey) {
+        depthsTitle.textContent = 'In Depths: Specialization Tracks';
+        depthsTitle.style.color = '#10b981';
+        
+        for(const key in CAREERS){
+            const c = CAREERS[key];
+            const hasSpecializations = Object.keys(c.roles || {}).length > 0;
+            
+            const card = document.createElement('div'); 
+            card.className = 'career-card';
+            card.setAttribute('data-title', c.title);
+            
+            if (hasSpecializations) {
+                card.innerHTML = `
+                    <div style="font-weight:900">${c.title}</div>
+                    <div class="small" style="margin-top:6px">${c.subtitle}</div>
+                    <div class="small" style="margin-top:10px; color:#10b981;">
+                        ${Object.keys(c.roles).length} specialization${Object.keys(c.roles).length !== 1 ? 's' : ''} available
+                    </div>
+                `;
+                card.addEventListener('click', () => { 
+                    renderDepths(key);
+                });
+            } else {
+                card.innerHTML = `
+                    <div style="font-weight:900">${c.title}</div>
+                    <div class="small" style="margin-top:6px">${c.subtitle}</div>
+                    <div class="small" style="margin-top:10px; color:#666;">
+                        No specializations yet
+                    </div>
+                `;
+                card.style.opacity = '0.7';
+                card.style.cursor = 'not-allowed';
+            }
+            
+            depthsGrid.appendChild(card);
+        }
+    } else {
+        // Show specializations for a specific career
+        const data = CAREERS[mainKey];
+        depthsTitle.textContent = `${data.title} Specializations`;
+        depthsTitle.style.color = '#10b981';
+
+        // Add back button
+        const backBtn = document.createElement('button');
+        backBtn.className = 'btn-back'; 
+        backBtn.textContent = '← Back to All Careers';
+        backBtn.style.cssText = 'margin-bottom:20px; grid-column: 1 / -1;';
+        backBtn.addEventListener('click', () => renderDepths());
+        depthsGrid.appendChild(backBtn);
+
+        // Show each specialization
+        for(const subKey in data.roles){
+            const role = data.roles[subKey];
+            const card = document.createElement('div'); 
+            card.className = 'career-card';
+            card.setAttribute('data-title', role.name);
+            
+            card.innerHTML = `
+                <div style="font-weight:900">${role.name}</div>
+                <div class="small" style="margin-top:6px">${role.desc}</div>
+                <div class="small" style="margin-top:10px; color:#10b981;">
+                    Click to view specialization path
+                </div>
+            `;
+            
+            card.addEventListener('click', () => { 
+                openDepthsDetail(mainKey, subKey);
+            });
+            
+            depthsGrid.appendChild(card);
+        }
+    }
+}
+
+// Fix the search functionality for specializations
+if (depthsSearch) {
+    depthsSearch.addEventListener('input', () => filterCards(depthsGrid, depthsSearch));
+}
+
+function openDepthsDetail(mainKey, subKey){
+    const mainData = CAREERS[mainKey];
+    const roleData = mainData?.roles?.[subKey];
+    if(!mainData || !roleData) { 
+        renderDepths(); 
+        return; 
+    }
+
+    showPage('depths_detail');
+    document.getElementById('depthDetailTitle').textContent = roleData.name;
+    document.getElementById('depthDetailSubtitle').textContent = `Specialization within ${mainData.title}`;
+
+    const pathEl = document.getElementById('depthDetailPath');
+    pathEl.innerHTML = `
+        <div style="font-weight:800; margin-bottom: 10px; color: #10b981;">Specialization Path:</div>
+    `;
+    
+    // Show specialization path steps
+    roleData.path_main_to_sub.forEach(step => {
+        const stepDiv = document.createElement('div');
+        stepDiv.className = 'path-step';
+        stepDiv.textContent = step;
+        pathEl.appendChild(stepDiv);
+    });
+
+    // Add skills section
+    pathEl.innerHTML += `
+        <div style="margin-top:20px; font-weight:800;">Essential Skills:</div>
+        <div style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px;">
+            ${roleData.skills.map(skill => `<span class="skill-badge">${skill}</span>`).join('')}
+        </div>
+    `;
+
+    document.getElementById('depthDetailBack').onclick = () => renderDepths(mainKey);
+}
+
+/* ============================================================
+    Roadmaps (Flowchart Visualization)
+   ============================================================ */
+function renderRoadmaps(){
+    const container = document.getElementById('roadmapsArea'); container.innerHTML = '';
+    for(const k in CAREERS){
+        const c = CAREERS[k];
+        const box = document.createElement('div'); box.className='panel';
+        box.style.marginBottom = '30px';
+
+        // Header
+        box.innerHTML = `<div style="font-weight:900; font-size: 1.1em; color:#ef4444;">${c.title} Roadmap</div><div class="small">${c.subtitle}</div>`;
+
+        // Flowchart steps
+        const flowContainer = document.createElement('div'); flowContainer.className = 'roadmap-flow-container';
+        c.roadmap.forEach(step => {
+            const stepDiv = document.createElement('div');
+            stepDiv.className = 'flow-step';
+            stepDiv.textContent = step;
+            flowContainer.appendChild(stepDiv);
+        });
+        box.appendChild(flowContainer);
+
+        // Suggested Courses
+        box.innerHTML += `<div style="margin-top:15px; border-top: 1px solid #eee; padding-top: 10px;"> <strong>Suggested Free Courses:</strong><ul>${(c.courses || []).map(cc=>`<li>${cc.title}</li>`).join('')}</ul></div>`;
+
+        container.appendChild(box);
+    }
+}
+
+/* ============================================================
+    QUIZ / Results
+   ============================================================ */
+const quizQuestions = [
+    {q:"Do you enjoy solving logical puzzles and coding?", a:["Yes, love it","Sometimes","Not really"]},
+    {q:"Do you enjoy caring for people's health and biology?", a:["Yes","Sometimes","No"]},
+    {q:"Are you interested in numbers, accounts, and finance?", a:["Yes","Sometimes","No"]},
+    {q:"Do you like leadership, public policy or social impact?", a:["Yes","Sometimes","No"]},
+    {q:"Would you enjoy research, data or AI/ML work?", a:["Yes","Sometimes","No"]}
+];
+let quizState = {index:0, answers: []};
+
+// references to quiz DOM elements
+const qCount = document.getElementById('qCount');
+const progBar = document.getElementById('quizProgBar');
+const quizContent = document.getElementById('quizContent');
+const btnPrev = document.getElementById('quizPrev');
+const btnSkip = document.getElementById('quizSkip');
+const btnNext = document.getElementById('quizNext');
+const btnCheck = document.getElementById('checkResultBtn');
+
+function startQuiz(){ quizState = {index:0, answers:new Array(quizQuestions.length).fill(null)}; renderQuiz(); showPage('quiz'); }
+function renderQuiz(){
+    const idx = quizState.index;
+    const item = quizQuestions[idx];
+    qCount.textContent = `${idx+1} / ${quizQuestions.length}`;
+    progBar.style.width = `${Math.round((idx/quizQuestions.length)*100)}%`;
+    // build question UI
+    quizContent.innerHTML = ` <div class="question">${item.q}</div> <div class="choices" id="choices"></div> `;
+    const choices = document.getElementById('choices');
+    item.a.forEach((opt,i)=>{
+        const d = document.createElement('div'); d.className='choice'; d.textContent = opt;
+        if(quizState.answers[idx] === i) d.classList.add('selected');
+        d.addEventListener('click', ()=> {
+            // set answer for this index (NO auto-advance)
+            quizState.answers[idx]=i;
+            // visual selection: remove selected from siblings
+            Array.from(choices.children).forEach(ch => ch.classList.remove('selected'));
+            d.classList.add('selected');
+            // if last question AND all answered -> show Check Result
+            updateCheckButtonVisibility();
+        });
+        choices.appendChild(d);
+    });
+    // Prev visibility
+    btnPrev.style.display = idx>0 ? 'inline-block':'none';
+    updateCheckButtonVisibility();
+}
+
+function updateCheckButtonVisibility(){
+    const allAnswered = quizState.answers.every(a => a !== null && a !== undefined);
+    const atLast = quizState.index === quizQuestions.length - 1;
+    if(allAnswered && atLast){
+        btnCheck.style.display = 'inline-block';
+        btnNext.style.display = 'none';
+    } else {
+        btnCheck.style.display = 'none';
+        btnNext.style.display = 'inline-block';
+    }
+}
+
+btnPrev?.addEventListener('click', ()=> { if(quizState.index>0){ quizState.index--; renderQuiz(); }});
+btnSkip?.addEventListener('click', ()=> { if(quizState.index < quizQuestions.length-1){ quizState.index++; renderQuiz(); } else { computeAndShowResults(); }});
+btnNext?.addEventListener('click', ()=> { if(quizState.index < quizQuestions.length-1){ quizState.index++; renderQuiz(); } else { computeAndShowResults(); }});
+btnCheck?.addEventListener('click', ()=> { computeAndShowResults(); });
+
+/* compute results */
+function computeResults(){
+    const scores = {}; for(const k in CAREERS) scores[k]=0;
+    const a = quizState.answers;
+    if(a[0]===0) { scores.engineering += 3; scores.research += 1; }
+    if(a[1]===0) { scores.doctor += 3; }
+    if(a[2]===0) { scores.ca += 3; scores.banking +=2; }
+    if(a[3]===0) { scores.ias += 3; scores.law += 1; }
+    if(a[4]===0) { scores.engineering +=2; scores.research +=2; }
+
+    const ranked = Object.entries(scores).sort((a,b)=>b[1]-a[1]).slice(0,3).map(x=>x[0]);
+    const rec = ranked.map(k => ({key:k, title: CAREERS[k].title, rationale: CAREERS[k].rationale}));
+    return rec;
+}
+
+function computeAndShowResults(){
+    const rec = computeResults();
+
+    // Save to user account history (if logged)
+    const u = getUser();
+    if(u){
+        const ac = getAccounts();
+        ac[u.email] = ac[u.email] || {name:u.name,email:u.email, pass:null, plans:[], quizCount:0, bookmarks:[]};
+        ac[u.email].quizCount = (ac[u.email].quizCount||0) + 1;
+        ac[u.email].plans = ac[u.email].plans || [];
+        ac[u.email].plans.push({timestamp: Date.now(), rec});
+        saveAccounts(ac);
+        // update dashboard stat
+        document.getElementById('statQuizzes').textContent = ac[u.email].quizCount || 0;
+    }
+
+    // show centered overlay card with recommendations
+    showResultOverlay(rec);
+}
+
+/* render the overlay card (center of page) */
+function showResultOverlay(rec){
+    // remove existing if present
+    const existing = document.getElementById('resultOverlay');
+    if(existing) existing.remove();
+
+    const overlay = document.createElement('div');
+    overlay.className = 'result-card-overlay';
+    overlay.id = 'resultOverlay';
+    overlay.innerHTML = `
+        <div class="result-card" role="dialog" aria-modal="true">
+            <div style="display:flex;justify-content:space-between;align-items:center;">
+                <div>
+                    <h3>🎯 Recommended Career Paths</h3>
+                    <div class="small center-note">Based on your answers, these paths suit you best.</div>
+                </div>
+                <div>
+                    <button class="close-btn" id="closeResultBtn">Close</button>
+                </div>
+            </div>
+            <div class="rec-list" style="margin-top:14px;">
+                ${rec.map((r,i)=>`
+                    <div class="rec-item">
+                        <div class="info">
+                            <div style="font-weight:900; font-size:1.02em; color:#3b82f6;">${i+1}. ${r.title}</div>
+                            <div class="small" style="margin-top:6px;">${r.rationale}</div>
+                        </div>
+                        <div style="display:flex;flex-direction:column;gap:8px;">
+                            <button class="btn" data-key="${r.key}" style="min-width:120px;">View Roadmap</button>
+                            <button class="btn-back" data-save="${r.key}" style="min-width:120px;">Save</button>
+                        </div>
+                    </div>
+                `).join('')}
+            </div>
+            <div style="margin-top:16px; text-align:right;">
+                <button id="closeResultBtn2" class="btn-back">Close</button>
+            </div>
+        </div>
+    `;
+    document.body.appendChild(overlay);
+
+    // attach handlers
+    document.getElementById('closeResultBtn')?.addEventListener('click', ()=> overlay.remove());
+    document.getElementById('closeResultBtn2')?.addEventListener('click', ()=> overlay.remove());
+
+    // View roadmap buttons
+    overlay.querySelectorAll('.btn[data-key]').forEach(b => {
+        b.addEventListener('click', (e) => {
+            const key = e.currentTarget.getAttribute('data-key');
+            overlay.remove();
+            location.hash = 'career:' + key;
+        });
+    });
+    // Save buttons
+    overlay.querySelectorAll('button[data-save]').forEach(b => {
+        b.addEventListener('click', (e) => {
+            const key = e.currentTarget.getAttribute('data-save');
+            const u = getUser();
+            if(!u){ alert('Please sign in to save plans'); return; }
+            const ac = getAccounts();
+            ac[u.email] = ac[u.email] || {name:u.name,email:u.email, pass:null, plans:[], quizCount:0, bookmarks:[]};
+            ac[u.email].bookmarks = ac[u.email].bookmarks || [];
+            if(!ac[u.email].bookmarks.includes(key)) ac[u.email].bookmarks.push(key);
+            saveAccounts(ac);
+            alert('Saved to your bookmarks');
+        });
+    });
+}
+
+/* ============================================================
+    Resume Builder Functionality
+   ============================================================ */
+function generateResumePreview() {
+    const name = document.getElementById('profile_name').value || 'Your Name';
+    const email = document.getElementById('profile_email').value || 'your.email@example.com';
+    const bio = document.getElementById('profile_bio').value || 'Professional summary...';
+    const skills = document.getElementById('resume_skills').value || 'Skill 1, Skill 2, Skill 3';
+    const education = document.getElementById('resume_edu').value || 'Your educational background...';
+    const projects = document.getElementById('resume_projects').value || 'Your projects and experience...';
+
+    const resumeContent = `
+RESUME
+====================
+
+${name}
+${email}
+
+PROFILE
+====================
+${bio}
+
+SKILLS
+====================
+${skills.split(',').map(skill => `• ${skill.trim()}`).join('\n')}
+
+EDUCATION
+====================
+${education}
+
+PROJECTS & EXPERIENCE
+====================
+${projects}
+
+---
+Generated by CareerPath Navigator
+    `.trim();
+
+    const previewElement = document.getElementById('resume_preview');
+    previewElement.textContent = resumeContent;
+    previewElement.style.display = 'block';
+    
+    return resumeContent;
+}
+
+function downloadResume() {
+    const resumeContent = generateResumePreview();
+    
+    // Create a blob and download link
+    const blob = new Blob([resumeContent], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    const name = document.getElementById('profile_name').value || 'resume';
+    
+    a.href = url;
+    a.download = `${name.replace(/\s+/g, '_')}_resume.txt`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+}
+
+// Add event listeners for resume buttons
+document.getElementById('generateResume')?.addEventListener('click', generateResumePreview);
+document.getElementById('downloadResume')?.addEventListener('click', downloadResume);
+
+/* ============================================================
+    Dashboard & Profile
+   ============================================================ */
+function loadDashboard(){ 
+    const u = getUser();
+    if(!u) return;
+    const ac = getAccounts()[u.email];
+    if(ac) {
+        document.getElementById('statQuizzes').textContent = ac.quizCount || 0;
+        document.getElementById('statPlans').textContent = ac.plans ? ac.plans.length : 0;
+        document.getElementById('statBookmarks').textContent = ac.bookmarks ? ac.bookmarks.length : 0;
+    }
+}
+
+function loadProfile(){
+    const u = getUser();
+    if(!u) return;
+    document.getElementById('profile_name').value = u.name || '';
+    document.getElementById('profile_email').value = u.email || '';
+}
+
+// Profile save button
+document.getElementById('saveProfile')?.addEventListener('click', function() {
+    alert('Profile saved successfully!');
+});
+
+// Export profile button
+document.getElementById('exportProfile')?.addEventListener('click', function() {
+    alert('Data export feature coming soon!');
+});
+
+// Save result button
+document.getElementById('btnSaveResult')?.addEventListener('click', function() {
+    alert('Results saved to your dashboard!');
+});
+
+// Go to careers from results
+document.getElementById('btnGoToCareersFromResults')?.addEventListener('click', function() {
+    navTo('careers');
+});
+
+/* ============================================================
+    Chatbot
+   ============================================================ */
+const chatToggle = document.getElementById('chatToggle');
+const chatBox = document.getElementById('chatBox');
+const chatBody = document.getElementById('chatBody');
+chatToggle?.addEventListener('click', ()=> {
+    chatBox.style.display = chatBox.style.display === 'none' || chatBox.style.display === '' ? 'flex' : 'none';
+    if(chatBox.style.display === 'flex') {
+        chatBody.innerHTML = '<div class="small">Hi! I am **CareerBot AI**. I can help you navigate the site or answer career questions.</div>';
+    }
+});
+document.getElementById('chatSend')?.addEventListener('click', sendChat);
+document.getElementById('chatInput')?.addEventListener('keydown', (e) => { if(e.key === 'Enter') sendChat(); });
+function appendChat(who, text){
+    const p = document.createElement('div'); p.style.marginBottom='8px';
+    p.innerHTML = `<div style="font-size:13px;font-weight:700">${who}</div><div class="small">${text}</div>`;
+    chatBody.appendChild(p); chatBody.scrollTop = chatBody.scrollHeight;
+}
+function sendChat(){
+    const q = document.getElementById('chatInput').value.trim();
+    if(!q) return;
+    appendChat('You', q);
+    document.getElementById('chatInput').value = '';
+    setTimeout(()=> {
+        const ans = careerBotAnswer(q);
+        appendChat('CareerBot', ans);
+    }, 400);
+}
+function careerBotAnswer(q){
+    q = q.toLowerCase();
+    if(/depths|specialize/.test(q)) return "To specialize, go to the 'In Depths (Specialization)' page. Select a main role (like Engineering) to see tracks (like AI/ML, Web Dev).";
+    if(/roadmap|flowchart/.test(q)) return "The 'Roadmaps (Flowcharts)' page provides quick visual, step-by-step summaries for all major careers.";
+    if(/lkg|full path|journey/.test(q)) return "The 'Careers (LKG to Role)' page shows the full educational journey from the very start to the key career milestone.";
+    if(/resume|cv/.test(q)) return "The Resume Builder is on the 'Profile & Resume' page. You can input your skills and education to generate a draft resume.";
+    if(/engineer|coding|program/.test(q)) return "If you enjoy coding: focus on programming basics, DS&A, build projects. Visit the 'Engineering' section on the 'In Depths' page to see AI/ML or WebDev tracks.";
+    if(/doctor|neet|med/.test(q)) return "Medical path: Focus on PCB in +2, prepare for NEET-UG, aim for MBBS. The 'Doctor / Healthcare' section in 'In Depths' details specializations like Surgery or Pediatrics.";
+    return "I can help with site navigation or career basics! Try asking: 'What's the difference between Careers and Roadmaps?' or 'Where is the Resume Builder?'";
+}
+window.addEventListener('keydown', (e)=> { if(e.key === 'Escape') chatBox.style.display = 'none'; });
+
+/* ============================================================
+    Welcome Page Button Functionality
+   ============================================================ */
+document.getElementById('btnQuizYes')?.addEventListener('click', () => {
+    startQuiz();
+    navTo('quiz');
+});
+
+document.getElementById('btnQuizNo')?.addEventListener('click', () => {
+    alert('Happy Exploring!');
+    navTo('careers');
+});
+
+/* ============================================================
+    Initialization
+   ============================================================ */
+(function init(){
+    const remembered = storage.getItem('cp_remember');
+    if(remembered){
+        const ac = getAccounts();
+        if(ac[remembered]) setUser({name: ac[remembered].name, email: remembered}, true);
+    }
+    updateTopUser();
+
+    renderCareers();
+    renderRoadmaps();
+
+    if(getUser()) navTo('welcome');
+    else navTo('auth');
+
+    handleHash();
+})();
+
+window.goExplore = function(e){
+    const k = e.target.getAttribute('data-key');
+    if(k) location.hash = 'career:' + k;
+};
